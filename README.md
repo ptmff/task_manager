@@ -41,7 +41,7 @@
 1. **Клонируйте репозиторий:**
 
    ```bash
-   git clone (https://github.com/ptmff/task_manager)
+   git clone https://github.com/ptmff/task_manager
    cd task_manager
    ```
 
