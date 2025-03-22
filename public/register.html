@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Регистрация</title>
+  <!-- Подключаем Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* Глобальные стили */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      background-color: #b1b1b1;
+      color: #242424;
+    }
+    .container {
+      max-width: 400px;
+      margin: 30px auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 2em;
+      color: #444;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    form input,
+    form button {
+      margin: 10px 0;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+      transition: box-shadow 0.3s, transform 0.3s;
+    }
+    form input:focus {
+      outline: none;
+      box-shadow: 0 0 8px rgba(81, 203, 238, 0.6);
+    }
+    form button {
+      background-color: #ff7e5f;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    form button:hover {
+      transform: scale(1.03);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    p {
+      text-align: center;
+      margin-top: 15px;
+    }
+    p a {
+      text-decoration: none;
+      color: #007bff;
+    }
+    p a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Регистрация</h1>
+    <form id="registerForm">
+      <input type="text" id="username" placeholder="Имя пользователя" required>
+      <input type="password" id="password" placeholder="Пароль" required>
+      <button type="submit">Зарегистрироваться</button>
+    </form>
+    <p>Уже есть аккаунт? <a href="login.html">Войти</a></p>
+  </div>
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message);
+        window.location.href = 'login.html';
+      } else {
+        alert(data.error || 'Ошибка регистрации');
+      }
+    });
+  </script>
+</body>
+</html>

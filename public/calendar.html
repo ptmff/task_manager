@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Календарь задач</title>
+    <!-- Подключаем Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Глобальные стили */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #b1b1b1;
+            color: #242424;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            color: #444;
+        }
+
+        /* Стили для фильтра */
+        .filter {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter label {
+            font-size: 16px;
+        }
+
+        .filter input,
+        .filter button {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+        .filter input:focus {
+            outline: none;
+            box-shadow: 0 0 8px rgba(81, 203, 238, 0.6);
+        }
+
+        .filter button {
+            background-color: #ff7e5f;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        .filter button:hover {
+            transform: scale(1.03);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Стили для карточек задач */
+        .task {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .task h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.3em;
+            color: #555;
+        }
+
+        .task p {
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+
+
+
+        .calendar-link-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            background-color: #007bff;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 12px 20px;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .calendar-link:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .calendar-link svg {
+            width: 28px;
+            height: 28px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="calendar-link-container">
+        <a href="index.html" class="calendar-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>Перейти к Менеджеру задач</span>
+        </a>
+    </div>
+    <div class="container">
+        <h1>Календарь задач</h1>
+        <div class="filter">
+            <label for="datePicker">Выберите дату:</label>
+            <input type="date" id="datePicker">
+            <button id="filterBtn">Показать задачи</button>
+        </div>
+        <div id="tasksContainer"></div>
+    </div>
+
+    <script>
+        function getAuthHeaders() {
+            const token = localStorage.getItem('token');
+            console.log(token);
+            return token ? { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token } : { 'Content-Type': 'application/json' };
+        }
+
+        // Функция для получения всех задач через API
+        async function fetchTasks() {
+            const res = await fetch('/api/tasks', {
+                headers: getAuthHeaders()
+            });
+            return await res.json();
+        }
+        // Функция для отображения задач
+        function renderTasks(tasks) {
+            const container = document.getElementById('tasksContainer');
+            container.innerHTML = '';
+            if (tasks.length === 0) {
+                container.textContent = 'Задач на выбранную дату не найдено';
+                return;
+            }
+            tasks.forEach(task => {
+                const div = document.createElement('div');
+                div.className = 'task';
+                div.innerHTML = `
+              <h3>${task.title}</h3>
+              <p>Статус: ${task.status}</p>
+              <p>Срок выполнения: ${new Date(task.dueDate).toLocaleString()}</p>
+              <p>Напоминание: ${task.reminder ? new Date(task.reminder).toLocaleString() : 'нет'}</p>
+            `;
+                container.appendChild(div);
+            });
+        }
+
+        // Обработчик клика для фильтрации задач по выбранной дате
+        document.getElementById('filterBtn').addEventListener('click', async () => {
+            const selectedDate = document.getElementById('datePicker').value;
+            if (!selectedDate) {
+                alert('Пожалуйста, выберите дату');
+                return;
+            }
+            // Получаем задачи
+            const tasks = await fetchTasks();
+            // Фильтруем задачи по дате (сравниваем YYYY-MM-DD)
+            const filteredTasks = tasks.filter(task => {
+                const taskDate = new Date(task.dueDate);
+                const formattedDate = taskDate.getFullYear() + '-' +
+                    String(taskDate.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(taskDate.getDate()).padStart(2, '0');
+                return formattedDate === selectedDate;
+            });
+            renderTasks(filteredTasks);
+        });
+
+        // Проверка наличия токена в localStorage
+        if (!localStorage.getItem('token')) {
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+
+</html>
