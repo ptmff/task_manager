@@ -53,15 +53,19 @@ app.post('/api/login', async (req, res) => {
   res.json({ token });
 });
 
-// Защищённые маршруты для работы с задачами:
+// Получение задач для авторизованного пользователя
 app.get('/api/tasks', authenticateToken, (req, res) => {
-  res.json(tasks);
+  // Фильтрация задач по userId текущего пользователя
+  const userTasks = tasks.filter(task => task.userId === req.user.userId);
+  res.json(userTasks);
 });
 
+// Создание новой задачи для авторизованного пользователя
 app.post('/api/tasks', authenticateToken, (req, res) => {
   const { title, dueDate, reminder } = req.body;
   const task = {
     id: nextId++,
+    userId: req.user.userId, // Привязываем задачу к пользователю
     title,
     status: "Новая", // статус по умолчанию
     dueDate,
@@ -71,26 +75,28 @@ app.post('/api/tasks', authenticateToken, (req, res) => {
   res.json(task);
 });
 
+// Обновление задачи (только если задача принадлежит текущему пользователю)
 app.put('/api/tasks/:id', authenticateToken, (req, res) => {
   const id = parseInt(req.params.id);
-  const index = tasks.findIndex(task => task.id === id);
+  const index = tasks.findIndex(task => task.id === id && task.userId === req.user.userId);
   if (index !== -1) {
     tasks[index] = { ...tasks[index], ...req.body };
     res.json(tasks[index]);
   } else {
-    res.status(404).json({ error: "Задача не найдена" });
+    res.status(404).json({ error: "Задача не найдена или доступ запрещен" });
   }
 });
 
+// Удаление задачи (только если задача принадлежит текущему пользователю)
 app.delete('/api/tasks/:id', authenticateToken, (req, res) => {
   const id = parseInt(req.params.id);
-  const index = tasks.findIndex(task => task.id === id);
+  const index = tasks.findIndex(task => task.id === id && task.userId === req.user.userId);
   if (index !== -1) {
     const deleted = tasks.splice(index, 1);
     res.json(deleted[0]);
   } else {
-    res.status(404).json({ error: "Задача не найдена" });
+    res.status(404).json({ error: "Задача не найдена или доступ запрещен" });
   }
 });
 
-app.listen(port, () => console.log(`Сервер запущен: http://localhost:${port}`));
+app.listen(port, () => console.log(`Начните использование сервиса на странице http://localhost:${port}/register.html`));
